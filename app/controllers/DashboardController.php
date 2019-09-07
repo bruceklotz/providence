@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
- * DashboardController.php
+ * DashboardController.php  pelhamhs.org v1.0.0
  * ----------------------------------------------------------------------
  * CollectiveAccess
  * Open-source collections management software
@@ -75,7 +75,7 @@
  			$this->render('dashboard/dashboard_html.php');
  		}
 		# -------------------------------------------------------
- 		public function default() {
+ 		public function default() { //pelhamhs.org
  			$this->opo_dashboard_manager->defaultDashboard();
  			$this->render('dashboard/dashboard_html.php');
  		}
