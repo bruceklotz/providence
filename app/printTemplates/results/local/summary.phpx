@@ -1,0 +1,127 @@
+<?php
+/* ----------------------------------------------------------------------
+ * app/templates/summary/summary.php
+ * ----------------------------------------------------------------------
+ 
+ * the "license.txt" file for details, or visit the CollectiveAccess web site at
+ * http://www.CollectiveAccess.org
+ *
+ * -=-=-=-=-=- CUT HERE -=-=-=-=-=-
+ * Template configuration:
+ *
+ * @name PHS Results Summary V1.0.1
+ * @type page
+ * @pageSize letter
+ * @pageOrientation portrait
+ * @tables *
+ *
+ * @marginTop 0.75in
+ * @marginLeft 0.25in
+ * @marginBottom 0.5in
+ * @marginRight 0.25in
+ *
+ * ----------------------------------------------------------------------
+ */
+	$version = "PHS Results Summary V1.0.1"; 
+ 	$t_item 				= $this->getVar('t_subject');
+	$va_bundle_displays 	= $this->getVar('bundle_displays');
+	$t_display 				= $this->getVar('t_display');
+	$va_placements 			= $this->getVar("placements");
+	
+	print $this->render("pdfStart.php");
+	print $this->render("header.php");
+	print $this->render("footer.php");
+
+ 
+ 	$vo_result = $this->getVar('result');	
+//	[ ^ca_storage_locations.hierarchy.preferred_labels.name%delimiter=-----  ]  <br/>
+//(<unit relativeTo='ca_storage_locations.hierarchy' delimiter='>>>' removeFirstItems='2' >^ca_storage_locations.preferred_labels.name</unit>)
+
+
+print str_replace("zzzzz",">>>",$vo_result->getWithTemplate("
+								<div class='storagetitle'>^ca_storage_locations.preferred_labels</div>
+								<div class='storagepath'>[ ^ca_storage_locations.hierarchy.preferred_labels.name%removeFirstItems=1%delimiter=_zzzzz_  ]</div>
+								<div class='version'>$version</div>
+								<ifdef code='ca_storage_locations.description'>^ca_storage_locations.description<br/></ifdef>"));
+
+print $vo_result->getWithTemplate("<div class='summary'>
+	<table>
+	 {{{<unit relativeTo='ca_storage_locations.children'>}}}
+	 <tr>
+			<td ><div class='box'>&nbsp;</div></td>
+			<td class='case'>
+			<if rule='^ca_storage_locations.type_id=~/box/'><span class='casetypebox'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></if>^ca_storage_locations.idno<div class='casetype'>
+			<if rule='^ca_storage_locations.type_id=~/box/'><span class='casetypebox'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></if>^ca_storage_locations.type_id</div></td>
+   		<td>^ca_storage_locations.preferred_labels</td>
+   		<td>^ca_object_representations.media.tiny</td>
+   </tr> 
+   {{{</unit>}}}
+	 
+	 {{{<unit relativeTo='ca_objects'>}}}
+	 <tr>
+			<td ><div class='box'>&nbsp;</div></td>
+			<td class='case'>^ca_objects.idno<div class='casetype'>^ca_objects.type_id</div></td>
+   		<td>^ca_objects.preferred_labels</td>
+   		<td>^ca_object_representations.media.tiny</td>
+   </tr>
+   {{{</unit>}}}
+  </table></div>");
+
+/* 
+print $vo_result->getWithTemplate('
+	<table cellspacing=0px cellpadding=4px style="border:2px solid green;">
+	{{{<unit relativeTo="ca_objects">}}}	<tr style="border-bottom:1px solid red;">
+			<td style="border-bottom:1px solid;width:16px"><div style="border:1px solid;width:15px;height:15px"></div></td>		
+					<td style="writing-mode: tb-rl;-webkit-transform: rotate(90deg); 
+                                    -moz-transform: rotate(90deg);
+                                    -ms-transform: rotate(90deg);
+                                     -o-transform: rotate(90deg);
+                                     transform: rotate(90deg);
+                                     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);	"><strong>^ca_objects.idno</strong></td>
+   				<td style="border-bottom:1px solid;width:300px;">^ca_objects.preferred_labels</td>
+   				<td style="border-bottom:1px solid;width:100px;">^ca_object_representations.media.tiny</td>   				
+    </tr> {{{</unit>}}}</table>');
+
+print $vo_result->getWithTemplate('
+ <div>
+<table cellspacing=0px cellpadding=4px>
+  <tr style="border-bottom:1px solid red;height:300px;">
+    <td style="border-bottom:1px solid;width:16px;height:100px">
+	<div style="border:1px solid;width:15px;height:15px"></div>
+    </td>
+    <unit relativeTo="ca_objects" >
+     <td style="writing-mode: tb-rl;-webkit-transform: rotate(90deg); 
+                                    -moz-transform: rotate(90deg);
+                                    -ms-transform: rotate(90deg);
+                                     -o-transform: rotate(90deg);
+                                     transform: rotate(90deg);
+                                     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);	">
+   <strong>  ^ca_objects.idno  </strong></td>
+   
+   <td style="writing-mode: tb-rl;-webkit-transform: rotate(90deg); 
+                                    -moz-transform: rotate(90deg);
+                                    -ms-transform: rotate(90deg);
+                                     -o-transform: rotate(90deg);
+                                     transform: rotate(90deg);
+                                     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);	">^ca_objects.preferred_labels </td>
+                  
+  <td style="writing-mode: tb-rl;-webkit-transform: rotate(90deg); 
+                                    -moz-transform: rotate(90deg);
+                                    -ms-transform: rotate(90deg);
+                                     -o-transform: rotate(90deg);
+                                     transform: rotate(90deg);
+                                     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);font-size:6px;width:60px">^ca_storage_locations.preferred_labels</td>
+  <td style="writing-mode: tb-rl;-webkit-transform: rotate(90deg); 
+                                    -moz-transform: rotate(90deg);
+                                    -ms-transform: rotate(90deg);
+                                     -o-transform: rotate(90deg);
+                                     transform: rotate(90deg);
+                                     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);	"> ^ca_object_representations.media.thumbnail</td>
+                                     </tr></unit></table>
+                                     </div>
+                                    '); 
+ 
+ */
+	print $this->render("pdfEnd.php");
+	
+	?>
