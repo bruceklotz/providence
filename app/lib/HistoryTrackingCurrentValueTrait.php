@@ -1,6 +1,7 @@
 <?php
 /** ---------------------------------------------------------------------
- * app/lib/HistoryTrackingCurrentValueTrait.php : 
+ * app/lib/HistoryTrackingCurrentValueTrait.php : Pelhamhs.org v1.0.1
+ *  L1973
  * ----------------------------------------------------------------------
  * CollectiveAccess
  * Open-source collections management software
@@ -167,7 +168,6 @@
 							if(!is_array($config)) { break; }
 							if ($table === 'ca_storage_locations') { 
 								$bundle_settings["{$table}_setInterstitialElementsOnAdd"] = $config['setInterstitialElementsOnAdd'];
-								$bundle_settings["{$table}_useDatePicker"] = $config['useDatePicker'];
 							} else {
 								$bundle_settings["{$table}_{$type}_setInterstitialElementsOnAdd"] = $config['setInterstitialElementsOnAdd'];
 							}
@@ -177,7 +177,7 @@
 						
 							$bundle_settings["{$table}_{$type}_dateElement"] = $config['date'];
 						
-							if ((sizeof($path) === 3) && ($rel_types = caGetOption(['restrictToRelationshipTypes', 'showRelationshipTypes'], $config, null)) && $path[1]) { 
+							if ((sizeof($path) === 3) && ($rel_types = caGetOption('restrictToRelationshipTypes', $config, null)) && $path[1]) { 
 								$bundle_settings["{$table}_showRelationshipTypes"] = [];
 								foreach($rel_types as $rel_type) {
 									if (($rel_type_id = $t_rel_type->getRelationshipTypeID($path[1], $rel_type)) && !in_array($rel_type_id, $bundle_settings["{$table}_showRelationshipTypes"])) { 
@@ -202,7 +202,9 @@
 		 * @return array Element array or null if not available.
 		 */
 		static public function getHistoryTrackingCurrentValuePolicyElement($policy, $table, $type=null, $options=null) {
+	//	error_log(__FILE__.__LINE__."policy $policy");
 			if (is_array($policy = self::getHistoryTrackingCurrentValuePolicy($policy)) && is_array($map = $policy['elements']) && is_array($map[$table])) {
+	//			error_log(__FILE__.__LINE__.print_r($map,1));
 				if(is_array($map[$table][$type])) {
 					return $map[$table][$type];
 				} elseif(is_array($map[$table]['__default__'])) {
@@ -598,7 +600,7 @@
 			}
 			
 			$tables = [];
-			foreach($policy_config['policies'] as $policy => $policy_info) {
+			foreach($policy_config['policies'] as $policy => $policy_info) { //echo __FILE__.__LINE__." policy:$policy policy_info <pre>".print_r($policy_info,1)."</pre>";
 				$tables[$policy_info['table']] = true;
 			}
 			return array_keys($tables);
@@ -1078,7 +1080,7 @@
 					require_once(__CA_MODELS_DIR__."/ca_movements.php");
 					$t_movement = new ca_movements();
 					$va_movement_type_info = $t_movement->getTypeList(); 
-			
+//echo __FILE__.__LINE__;	
 					$va_date_elements_by_type = [];
 					foreach($va_movement_types as $vn_type_id) {
 						if (!is_array($va_date_elements = caGetOption("ca_movements_{$va_movement_type_info[$vn_type_id]['idno']}_dateElement", $pa_bundle_settings, null)) && $va_date_elements) {
@@ -1086,6 +1088,7 @@
 						}
 						if (!$va_date_elements) { continue; }
 						$va_date_elements_by_type[$vn_type_id] = $va_date_elements;
+						
 					}
 					
 					$vs_default_display_template = '^ca_movements.preferred_labels.name (^ca_movements.idno)';
@@ -1134,7 +1137,7 @@
 							if ($pb_get_current_only && (($va_date['bounds'][0] > $vn_current_date))) { continue; }
 							
 							$status = ($va_date['bounds'][0] > $vn_current_date) ? 'FUTURE' : 'PAST';
-					
+				
 							$vs_color = $va_movement_type_info[$vn_type_id]['color'];
 							if (!$vs_color || ($vs_color == '000000')) {
 								$vs_color = caGetOption("ca_movements_{$va_movement_type_info[$vn_type_id]['idno']}_color", $pa_bundle_settings, 'ffffff');
@@ -1627,7 +1630,7 @@
 					$va_child_locations = array_reduce($qr->getWithTemplate("<unit relativeTo='{$table}.children' delimiter=';'>^{$linking_table}.relation_id</unit>", ['returnAsArray' => true]), function($c, $i) { return array_merge($c, explode(';', $i)); }, []);
 					if ($pb_show_child_history) { $va_locations = array_merge($va_locations, $va_child_locations); }
 				}
-
+		
 				if(is_array($va_location_types = caGetOption('ca_storage_locations_showRelationshipTypes', $pa_bundle_settings, null)) && is_array($va_locations)) {	
 					require_once(__CA_MODELS_DIR__."/ca_storage_locations.php");
 					$t_location = new ca_storage_locations();
@@ -1666,7 +1669,7 @@
 						);
 
 						if (!$va_date['sortable']) { continue; }
-						if (sizeof($va_location_types) && !in_array($vn_rel_type_id = $qr_locations->get("{$linking_table}.type_id"), $va_location_types)) { continue; }
+						if (!in_array($vn_rel_type_id = $qr_locations->get("{$linking_table}.type_id"), $va_location_types)) { continue; }
 						
 						if ($pb_get_current_only && (($va_date['bounds'][0] > $vn_current_date))) { continue; }
 						
@@ -1845,9 +1848,7 @@
 		public function getContents($policy, $options=null) {
 			if(!($row_id = caGetOption('row_id', $options, $this->getPrimaryKey()))) { return null; }
 			if (!$policy) { if (!($policy = $this->getDefaultHistoryTrackingCurrentValuePolicy())) { return null; } }
-		
-			$values = ca_history_tracking_current_values::find(['policy' => $policy, 'current_table_num' => $this->tableNum(), 'current_row_id' => $row_id], ['returnAs' => 'arrays', 'transaction' => $this->getTransaction()]);
-		
+				$values = ca_history_tracking_current_values::find(['policy' => $policy, 'current_table_num' => $this->tableNum(), 'current_row_id' => $row_id], ['returnAs' => 'arrays', 'transaction' => $this->getTransaction()]);
 			$ids = array_map(function($v) { return $v['row_id']; }, $values);
 			$row = array_shift($values);
 	
@@ -1894,38 +1895,30 @@
 			$o_view->setVar('bundle_name', caGetOption('bundleName', $pa_options, null));
 			
 			$o_view->setVar('settings', $pa_bundle_settings);
-		
+	//	error_log(__FILE__.__LINE__." )_view".print_r($o_view,1));
 			$o_view->setVar('add_label', isset($pa_bundle_settings['add_label'][$g_ui_locale]) ? $pa_bundle_settings['add_label'][$g_ui_locale] : null);
 			$o_view->setVar('t_subject', $this);
 		
 			//
 			// Occurrence update
 			//
-			$o_view->setVar('occurrence_types', []);
-			$o_view->setVar('occurrence_relationship_types', []);
-			$o_view->setVar('occurrence_relationship_types_by_sub_type', []);
 			if (is_array($path = Datamodel::getPath($this->tableName(), 'ca_occurrences')) && ($path = array_keys($path)) && (sizeof($path) === 3)) {
 				$linking_table = $path[1];
 				if (($t_occ_rel = Datamodel::getInstance($linking_table, true)) && ($t_occ = Datamodel::getInstance('ca_occurrences', true))) {
-					$va_occ_types_to_show =  array_filter(caGetOption('add_to_occurrence_types', $pa_bundle_settings, array(), ['castTo' => 'array']), function($v) { return (bool)$v; });
-					if(sizeof($va_occ_types_to_show) > 0) {
-                        $va_occ_types = $t_occ->getTypeList();
-                        foreach($va_occ_types as $vn_type_id => $va_type_info) {
-                            if (!in_array($vn_type_id, $va_occ_types_to_show) && !in_array($va_type_info['idno'], $va_occ_types_to_show)) { unset($va_occ_types[$vn_type_id]); }
-                        }
-                        $o_view->setVar('occurrence_types', $va_occ_types);
-                        $o_view->setVar('occurrence_relationship_types', $t_occ_rel->getRelationshipTypes(null, null,  array_merge($pa_options, $pa_bundle_settings)));
-                        $o_view->setVar('occurrence_relationship_types_by_sub_type', $t_occ_rel->getRelationshipTypesBySubtype($this->tableName(), $this->get('type_id'),  array_merge($pa_options, $pa_bundle_settings)));
-                    }
+					$va_occ_types = $t_occ->getTypeList();
+					$va_occ_types_to_show =  caGetOption('add_to_occurrence_types', $pa_bundle_settings, array(), ['castTo' => 'array']);
+					foreach($va_occ_types as $vn_type_id => $va_type_info) {
+						if (!in_array($vn_type_id, $va_occ_types_to_show) && !in_array($va_type_info['idno'], $va_occ_types_to_show)) { unset($va_occ_types[$vn_type_id]); }
+					}
+					$o_view->setVar('occurrence_types', $va_occ_types);
+					$o_view->setVar('occurrence_relationship_types', $t_occ_rel->getRelationshipTypes(null, null,  array_merge($pa_options, $pa_bundle_settings)));
+					$o_view->setVar('occurrence_relationship_types_by_sub_type', $t_occ_rel->getRelationshipTypesBySubtype($this->tableName(), $this->get('type_id'),  array_merge($pa_options, $pa_bundle_settings)));
 				}
 			}
 			
 			//
 			// Collection update
 			//
-			$o_view->setVar('collection_types', []);
-			$o_view->setVar('collection_relationship_types', []);
-			$o_view->setVar('collection_relationship_types_by_sub_type', []);
 			if (is_array($path = Datamodel::getPath($this->tableName(), 'ca_collections')) && ($path = array_keys($path)) && (sizeof($path) === 3)) {
 				$linking_table = $path[1];
 				if (($t_coll_rel = Datamodel::getInstance($linking_table, true)) && ($t_coll = Datamodel::getInstance('ca_collections', true))) {
@@ -1943,9 +1936,6 @@
 			//
 			// Entity update
 			//
-			$o_view->setVar('entity_types', []);
-			$o_view->setVar('entity_relationship_types', []);
-			$o_view->setVar('entity_relationship_types_by_sub_type', []);
 			if (is_array($path = Datamodel::getPath($this->tableName(), 'ca_entities')) && ($path = array_keys($path)) && (sizeof($path) === 3)) {
 				$linking_table = $path[1];
 				if (($t_entity_rel = Datamodel::getInstance($linking_table, true)) && ($t_entity = Datamodel::getInstance('ca_entities', true))) {
@@ -1963,8 +1953,6 @@
 			//
 			// Loan update
 			//
-			$o_view->setVar('loan_relationship_types', []);
-			$o_view->setVar('loan_relationship_types_by_sub_type', []);
 			if (is_array($path = Datamodel::getPath($this->tableName(), 'ca_loans')) && ($path = array_keys($path)) && (sizeof($path) === 3)) {
 				$linking_table = $path[1];
 				if ($t_loan_rel = Datamodel::getInstance($linking_table, true)) {
@@ -1976,21 +1964,19 @@
 			//
 			// Movement update
 			//
-			$o_view->setVar('movement_relationship_types', []);
-			$o_view->setVar('movement_relationship_types_by_sub_type', []);
 			if (is_array($path = Datamodel::getPath($this->tableName(), 'ca_movements')) && ($path = array_keys($path)) && (sizeof($path) === 3)) {
 				$linking_table = $path[1];
+				//echo __FILE__.__LINE__."linking_table $linking_table <br/>";
 				if ($t_movement_rel = Datamodel::getInstance($linking_table, true)) {
 					$o_view->setVar('movement_relationship_types', $t_movement_rel->getRelationshipTypes(null, null,  array_merge($pa_options, $pa_bundle_settings)));
 					$o_view->setVar('movement_relationship_types_by_sub_type', $t_movement_rel->getRelationshipTypesBySubtype($this->tableName(), $this->get('type_id'),  array_merge($pa_options, $pa_bundle_settings)));
+			  	$o_view->setVar('location_change_url', caNavUrl($po_request, 'editor/movements', 'MovementQuickAdd', 'Form', array('movement_id' => 0)));//pelhamhs.org
 				}
 			}
 			
 			//
 			// Object update
 			//
-			$o_view->setVar('object_relationship_types', []);
-			$o_view->setVar('object_relationship_types_by_sub_type', []);
 			if (is_array($path = Datamodel::getPath($this->tableName(), 'ca_objects')) && ($path = array_keys($path)) && (sizeof($path) === 3)) {
 				$linking_table = $path[1];
 				if ($t_object_rel = Datamodel::getInstance($linking_table, true)) {
@@ -2002,11 +1988,10 @@
 			//
 			// Location update
 			//
-			$o_view->setVar('location_relationship_types', []);
-			$o_view->setVar('location_relationship_types_by_sub_type', []);
 			if (is_array($path = Datamodel::getPath($this->tableName(), 'ca_storage_locations')) && ($path = array_keys($path)) && (sizeof($path) === 3)) {
 				$linking_table = $path[1];
-				if ($t_location_rel = Datamodel::getInstance($linking_table, true)) {
+					//echo __FILE__.__LINE__."linking_table $linking_table <br/>";
+				if ($t_location_rel = Datamodel::getInstance($linking_table, true)) {//echo __FILE__.__LINE__."linking_table $linking_table <br/>";
 					$o_view->setVar('location_relationship_types', $t_location_rel->getRelationshipTypes(null, null,  array_merge($pa_options, $pa_bundle_settings)));
 					$o_view->setVar('location_relationship_types_by_sub_type', $t_location_rel->getRelationshipTypesBySubtype($this->tableName(), $this->get('type_id'),  array_merge($pa_options, $pa_bundle_settings)));
 				}
@@ -2015,7 +2000,7 @@
 			$h = $this->getHistory(array_merge($pa_bundle_settings, $pa_options));
 			$o_view->setVar('child_count', $child_count = sizeof(array_filter($h, function($v) { return sizeof(array_filter($v, function($x) { return $x['hasChildren']; })); })));
 			$o_view->setVar('history', $h);
-			
+		//echo __FILE__.__LINE__.print_r($pa_bundle_settings,1);
 			return $o_view->render('history_tracking_chronology.php');
 		}
 		# ------------------------------------------------------
@@ -2062,8 +2047,8 @@
 			$o_view->setVar('t_subject', $this);
 		
 			$h = $x = $this->getHistory();
-		
-			$last_location = array_shift(array_shift($x));
+		echo __FILE__.__LINE__."XXXXX".print_r($h,1);
+			$last_location = array_shift(array_shift($x));// $this->getLastLocation(array());
 			if (!($t_last_location = Datamodel::getInstance($last_location['tracked_table_num']))) { throw new ApplicationException(_t('Invalid table')); }
 			$t_last_location->load($last_location['tracked_row_id']);
 			$vs_display_template = null;
@@ -2111,9 +2096,9 @@
 		
 			$o_view->setVar('add_label', isset($pa_bundle_settings['add_label'][$g_ui_locale]) ? $pa_bundle_settings['add_label'][$g_ui_locale] : null);
 			$o_view->setVar('t_subject', $this);
-		
+		//error_log(__FILE__.__LINE__."policy $policy   pthis->getContents($policy):".print_r($this->getContents($policy),1));
 			$o_view->setVar('qr_result', $this->getContents($policy));	
-		
+		echo__FILE__.__LINE__;
 			return $o_view->render('history_tracking_current_contents.php');
 		}
 		# ------------------------------------------------------
@@ -2133,10 +2118,11 @@
 			global $g_ui_locale;
 			
 			$buf = '';
-			
+				
 			$rel_table = get_called_class();
 			$type_idno = caGetOption('type', $options, null);
 			$placement_code = caGetOption('placement_code', $options, null);
+			
 			if((is_array($interstitial_elements = $settings["{$rel_table}_".($type_idno ? "{$type_idno}_" : "")."setInterstitialElementsOnAdd"])|| is_array($interstitial_elements = $settings["setInterstitialElementsOnAdd"])) && sizeof($interstitial_elements) && ($linking_table = Datamodel::getLinkingTableName($subject_table, $rel_table))) {
 				$buf .= "<table class='caHistoryTrackingUpdateLocationMetadata'>\n";
 				if (!($t_rel = Datamodel::getInstance($linking_table, true))) { return null; }	
@@ -2145,7 +2131,8 @@
 				$t_ui = ca_editor_uis::find(['editor_type' => Datamodel::getTableNum($linking_table)], ['returnAs' => 'firstModelInstance', 'transaction' => caGetOption('transaction', $options, null)]);
 				foreach($interstitial_elements as $element_code) {
 					$buf .= "<tr>";
-					
+					//	echo __FILE__.__LINE__."XXXXX element_code $element_code";
+		
 					$label = null;
 					if (($t_ui) && is_array($p = $t_ui->getPlacementsForBundle($element_code))) {
 						$l = array_shift($p);
@@ -2169,9 +2156,9 @@
 								$field_class = '';
 								break;
 						}
-						$buf .= "<td><div class='formLabel'>{$label}<br/>".$t_rel->htmlFormElement($element_code, '', ['name' => "{$id_prefix}_{$rel_table}_{$type_idno}_{$element_code}".'{n}', 'id' => "{$id_prefix}_{$rel_table}_{$type_idno}_{$element_code}".'{n}', 'value' => _t('today'), 'classname' => $field_class])."</td>";
+						$buf .= "<td><div class='formLabel'>{$label}<br/>".$t_rel->htmlFormElement($element_code, '', ['name' => $id_prefix."_{$rel_table}_".$element_code.'{n}', 'id' => $id_prefix."_{$rel_table}_".$element_code.'{n}', 'value' => _t('today'), 'classname' => $field_class])."</td>";
 					} else {
-						$buf .= "<td class='formLabel'>{$label}<br/>".$t_rel->getAttributeHTMLFormBundle($request, null, $element_code, $placement_code, $settings, ['elementsOnly' => true])."</td>";
+						$buf .= "<td class='formLabel'>aa	".__FILE__.__LINE__."$element_code, $placement_code | {$label}<br/>".$t_rel->getAttributeHTMLFormBundle($request, null, $element_code, $placement_code, $settings, ['elementsOnly' => true])."</td>";
 					}	
 					$buf .= "</tr>\n";
 				}
@@ -2202,13 +2189,12 @@
 				if (is_array($interstitial_elements = caGetOption(["{$rel_table}_{$type}_setInterstitialElementsOnAdd", "{$rel_table}_setInterstitialElementsOnAdd"], $settings, array()))) {
 					foreach($interstitial_elements as $element_code) {
 						if ($t_item_rel->hasField($element_code)) {
-							$t_item_rel->set($element_code, $vs_val = $po_request->getParameter(["{$placement_code}{$form_prefix}_{$type}_{$element_code}new_0", "{$placement_code}{$form_prefix}__{$element_code}new_0"], pString));
+							$t_item_rel->set($element_code, $vs_val = $po_request->getParameter("{$placement_code}{$form_prefix}_{$type_id}_{$element_code}new_0", pString));
 						} elseif ($element_id = ca_metadata_elements::getElementID($element_code)) {
 							$sub_element_ids = ca_metadata_elements::getElementsForSet($element_id, ['idsOnly' => true]);
 							$vals = [];
-							
 							foreach($sub_element_ids as $sub_element_id) {
-								$vals[ca_metadata_elements::getElementCodeForID($sub_element_id)] = $po_request->getParameter(["{$placement_code}{$form_prefix}_{$type}_{$sub_element_id}_new_0", "{$placement_code}{$form_prefix}__{$sub_element_id}_new_0"], pString);
+								$vals[ca_metadata_elements::getElementCodeForID($sub_element_id)] = $po_request->getParameter("{$placement_code}{$form_prefix}_{$type_id}_{$sub_element_id}_new_0", pString);
 							}
 							$t_item_rel->addAttribute($vals, $element_code);
 						}
@@ -2223,13 +2209,14 @@
 		 *
 		 */
 		public function renderBundleForDisplay($ps_bundle_name, $pn_row_id, $pa_values, $pa_options=null) {
+	
 			switch($ps_bundle_name) {
 				case 'ca_objects_location':
 				case 'ca_objects_location_date':
 				case 'history_tracking_current_value':
 				case 'history_tracking_current_date':
 					if (method_exists($this, "getHistory")) {
-						
+						echo __FILE__.__LINE__."XXXXX";
 						//
 						// Output current "location" of object in life cycle. Configuration is taken from a ca_objects_history bundle configured for the current editor
 						//
@@ -2249,6 +2236,7 @@
 					return '';
 					break;
 				case 'history_tracking_current_contents':
+				
 					if (method_exists($this, "getContents")) {
 					    $policy = caGetOption('policy', $pa_options, null);
 						if ($qr = $this->getContents($policy, ['row_id' => $pn_row_id])) { 
