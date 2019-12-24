@@ -1,0 +1,449 @@
+<?php
+/* ----------------------------------------------------------------------
+ * app/printTemplates/results/local/accessionsheet.php PELHAMHS.ORG
+ * ----------------------------------------------------------------------
+ *
+ * -=-=-=-=-=- CUT HERE -=-=-=-=-=-
+ * Template configuration:
+ *
+ * @name PHS Accession Sheet V1.1.16 Summary
+ * @type page
+ * @pageSize letter
+ * @pageOrientation portrait
+ * @tables ca_objects
+ *
+ * @marginTop 0.75in
+ * @marginLeft 0.25in
+ * @marginBottom 0.5in
+ * @marginRight 0.25in
+ *
+ * ----------------------------------------------------------------------
+ */
+	$version = "PHS Accession Sheet V1.1.16 Summary"; 
+	$t_item = $this->getVar('t_subject');
+	
+	//Build pdf filename (requires modified BaseEditorController.php 
+	$path = $t_item->getWithTemplate("^ca_objects.idno");  
+	$sq =  "PHS_Accession_Sheet_".str_replace(array(' ','*','\''),'',$path).".pdf";// Remove illegal characters to add search term to the file name
+	$this->setVar('filename',$sq);
+ 	
+	$this->setVar('headerTitle','Collections Accessions Sheet');
+	$this->setVar('showPagenumber',false);
+	
+	// The following is used to guesstimate how long the descriptions, etc will be to decide if this is a 2 page report or not:
+	$textpage=$t_item->getWithTemplate("
+		<unit relativeTo='ca_entities' delimiter=', ' restrictToRelationshipTypes='owners'>^ca_entities.preferred_labels.displayname</unit>
+		^ca_objects.provenance
+		<unit delimiter=' '>	
+			<div class='conditiond'> ^ca_objects.condition_report.condition_date </div>
+			<div class='conditionu'> ^ca_objects.condition_report.condition_by </div>
+			<div class='conditionn'> ^ca_objects.condition_report.condition_notes</div>
+			<br/>
+		</unit>");
+	
+	$textdesc = $t_item->getWithTemplate("^ca_objects.description%delimiter=,_ ");		
+		
+	// If the description or textpage is larger than 500 then make report two pages long.
+	if( strlen($textdesc) + strlen($textpage) > 1500 )
+		{	$twopages="2";
+			$pagebreak="<div class='pageBreak' style='page-break-before: always;'>&nbsp;</div>\n";
+				
+			$this->setVar('showPagenumber',true);
+		}else{
+			$twopages="";
+			$pagebreak="";
+			$barcode2="";
+				
+	}
+	//----------------------------	
+	
+	$out = $t_item->getWithTemplate("
+		<div class='accession'>
+			<div id='version'>$version $textlen</div>
+			<div id='namel'>Name:</div><div id='name'>^ca_objects.preferred_labels</div><div class='a_bk'></div></div>
+			<div id='mediar'>^ca_object_representations.related.media.medium</div>");
+			
+	
+//--- Generate Barcode ------
+	$root = 'http://pelhamhs.org/ca/index.php/editor/objects/ObjectEditor/Edit/object_id/'; // this should get pulled out or automated somehow.
+	$path = $t_item->getWithTemplate($root."^ca_objects.object_id");
+	$vs_path = caGenerateBarcode($path, array('checkValues' => $this->opa_check_values, 'type' => 'qrcode', 'height' => 3));
+	
+	if($twopages == 2){$barcode2="<div id='barcode'><img src='$vs_path.png'/><br/>$path</div>";}
+	
+	$out .= "<div id='barcode'><img src='$vs_path.png'/><br/>$path</div>";
+	
+//--- Full Name/Title ------
+/*
+<div id='titlel'>Full Name:</div><div id='titled'>^ca_objects.nonpreferred_labels%delimiter=,_</div>
+*/
+         $fullname ="<div id='titlel'>Full Name:</div><div id='titled'>";
+         $name_array	= $t_item->get('ca_objects.nonpreferred_labels', array('convertCodesToDisplayText' => true,'returnWithStructure' => true));
+         $type_array	= $t_item->get('ca_objects.nonpreferred_labels.type_id', array('convertCodesToDisplayText' => true,'returnWithStructure' => true));
+         foreach($name_array as $key=>$nameitems){
+            foreach($nameitems as $ikey=>$nameitem){
+               if ($type_array[$key][$ikey]['type_id'] == "alternate"){$fullname .= $nameitem['name'];}
+             //  if ($type_array[$key][$ikey]['type_id'] == "other number"){$othernumber .= "<span class='titlell'>, ".$type_array[$key][$ikey]['type_id'].": </span> ".$nameitem['name'];}
+            }
+         }
+         $fullname .="</div>";
+	
+//--- Other Number ------
+/*
+<div id='othernuml'>Other No.:</div><div id='othernumd'>^ca_objects.nonpreferred_labels%delimiter=,_limitToType='other number'</div>
+*/
+         $othernumber ="<div id='othernumberl'>Other No(s):</div><div id='othernumberd'>";
+         $name_array	= $t_item->get('ca_objects.nonpreferred_labels', array('convertCodesToDisplayText' => true,'returnWithStructure' => true));
+         $type_array	= $t_item->get('ca_objects.nonpreferred_labels.type_id', array('convertCodesToDisplayText' => true,'returnWithStructure' => true));
+         $other="";
+         foreach($name_array as $key=>$nameitems){
+            foreach($nameitems as $ikey=>$nameitem){
+               if ($type_array[$key][$ikey]['type_id'] == "other number"){$other .= $nameitem['name'];}
+            
+            }
+         }
+         if($other){$othernumber .="$other</div>";}else{$othernumber="";}
+//--------------------------
+
+
+	$out .= $t_item->getWithTemplate("
+			<div id='idnol'>Id:</div><div id='idno'>^ca_objects.idno</div>	
+			$fullname
+			$othernumber");
+   
+//---cataloged -----
+        $catalogout = "
+	   <div id='cataloged'>";
+	$catalog_array	= $t_item->get('ca_objects.catalogedby', array('convertCodesToDisplayText' => true,'returnWithStructure' => true));
+        foreach($catalog_array as $catitems){
+           foreach($catitems as $ikey=>$catitem){
+              if(strlen($catitem['cataloged_date_type']) > 11){$catalogedlstyle="style='font-size:12px;margin-top:2px;'";}else{$catalogedlstyle="";} //If label wont fit, shrink it.
+              $catalogout .= "
+                 <div class='catalogedl' $catalogedlstyle>".$catitem['cataloged_date_type'].":</div>	
+                 <div class='catalogedd'> ".$catitem['catalogdate']."</div>
+                 <div class='catalogedn'><i> ".$catitem['cataloger']." </i> ".$catitem['notes']."</div>
+                 <div class='a_bk'></div>";
+           }
+        } 		  
+        $catalogout .="</div>";	
+	
+//--- Lexicon ------	
+	$lex_item_array	= $t_item->get('ca_objects.lexicon3.hierarchy.preferred_labels', array('returnAsArray' => true));
+	$lexout = "
+		<div id='lexicon3'> 
+				
+				<div class='lexicon3d'><div class='lexicon3l'>Lexicon: </div>";
+				  $lastitem=count($lex_item_array)-1;
+					foreach($lex_item_array as $key=>$item){
+						
+						if ($key>0){
+							//format is NOT the first item
+							$leftmargin="style='margin-left:25px;height:20px;'";
+						}else{
+							//format for FIRST item
+							$leftmargin="style='margin-left:0px; height:20px;font-size:16px;'";
+						}
+						
+						if ($key !=$lastitem and $key>0){
+							//format is NOT first or last item
+							$spacer ="<span class='arrowr'>&nbsp;&nbsp;&nbsp;</span>";
+						}else{$spacer="";}
+						
+						if ($key == $lastitem){
+							//format for last item
+							$leftmargin="style='margin:25px;height:50px; border-radius:25px;line-height:150%'";
+						}
+						//now change ; into arrows.
+						$spacerx =" <span class='arrowr'>&nbsp;&nbsp;&nbsp;</span>";
+						// first decode to change &amp;, etc back to '&' so that only the semicolons we need to change remain.
+						// then change the semicolons to ~ (so that we can find them after re-encoding, then re-encode, then convert ~ to $spacerx (arrow)
+						$item = str_replace("~",$spacerx,htmlspecialchars(str_replace(";","~",htmlspecialchars_decode($item)))); 
+						$lexout .= "<div class='lexicon3t' $leftmargin> $spacer $item <br/></div>";
+						
+					} 
+		
+	$lexout .="
+	 			</div>
+				<div class='a_bk'></div>
+		</div>";
+	$out .= $lexout;
+  //-------------------
+  //$locationh = $t_item->get('ca_objects_location');
+  //$location  = substr($locationh,strrpos($locationh," > ")+2);
+  
+  // Get the current objects's last movement
+  $object_id = $t_item->get('ca_objects.object_id'); 
+  $the_object = new ca_objects($object_id);
+  if( $the_movement = $the_object->getLastMovement(array('dateElement' => 'removal_date','object_id' =>'$object_id'))){
+      $movement_id = $the_movement->get('movement_id');
+      //Hack to get the location_id because we need to lookup ca_movements_x_storage_locations by movement_id (and not relationship_id as New ca_movements_x_storage_locations() requires )
+      $o_data = new Db();
+      $qr_result = $o_data->query("
+           SELECT *
+           FROM `ca_movements_x_storage_locations`
+           WHERE `movement_id` =".$movement_id);
+      while($qr_result->nextRow()) { $location_id = $qr_result->get('location_id'); }
+      $this_location = new ca_storage_locations($location_id);
+      $locationh = htmlspecialchars_decode($this_location->get('ca_storage_locations.hierarchy.preferred_labels.name',array('delimiter' => ' > ')));
+      $location = htmlspecialchars_decode($this_location->get('ca_storage_locations.preferred_labels.name'));
+  }else{$location="";$locationh="";}
+            	
+// Materials, Dimensions, Status, Deaccessioned, Maker  			  
+	$out .= "
+     <div id='materialsl'>Materials:</div><div id='materials'> ^ca_objects.materials%delimiter=,_ </div>
+	   <div id='dimbox'>       	
+        <div id='diml'>Dimensions:<div class='dimlb'>Notes:</div></div>
+        <div id='dimd'>
+           <div id='dim_l'>^ca_objects.dimensions.dimensions_length <span class='dimlb'>Length</span></div> 
+           <div id='dim_w'><span class='dimlx'>x</span> ^ca_objects.dimensions.dimensions_width <span class='dimlb'>Width</span></div> 
+           <div id='dim_h'><span class='dimlx'>x</span> ^ca_objects.dimensions.dimensions_height <span class='dimlb'>Height</span></div>
+           <div id='dim_t'><span class='dimlx'>x</span> ^ca_objects.dimensions.dimensions_thickness <span class='dimlb'>Thickness</span></div>
+           <div id='dim_wg'><span class='dimlb'>Weight:</span> ^ca_objects.dimensions.dimensions_weight</div>
+           <div id='dim_n'><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^ca_objects.dimensions.measurement_notes</div>
+        </div>
+     </div>
+     <div id='status'>
+        <div class='statusl'>Status: </div>
+        <div class='statusd'>^ca_objects.status (<i>^ca_objects.item_status_id</i>)</div>
+        <div class='a_bk'></div>
+     </div>
+     <if rule='^ca_objects.is_deaccessioned =~/Yes/'>
+        <div id='deaccession'>
+           <unit delimiter=' '>
+              <div class='deaccessionl'>*** DE-ACCESSIONED! ***</div>
+              <div class='deaccessiond'> ^ca_objects.deaccession_date &nbsp; - &nbsp; <i>^ca_objects.deaccession_type_id </i></div> 
+              <div class='deaccessionn'>^ca_objects.deaccession_notes</div>
+           </unit>
+        </div>
+     </if>
+		 <div class='a_bk'></div>
+     <div id='makerl'>Maker:</div>
+     <div id='maker'><unit relativeTo='ca_entities' delimiter=', ' restrictToRelationshipTypes='creator'>
+        ^ca_entities.preferred_labels.displayname 
+     </unit></div>	
+	   <div id='makedatel'>Date Created:</div>
+     <div id='makedate'><unit  delimiter='<br/> '><if rule='^ca_objects.date.dc_dates_types =~ /Date created/'>^ca_objects.date.dates_value</if></unit></div>
+	   <if rule='^ca_objects.date.dc_dates_types =~ /Date copyrighted/'>
+		    <div id='datecopyrl'>Copyrighted:</div>
+		    <div id='datecopyr'>
+			     <unit  delimiter='<br/> '><if rule='^ca_objects.date.dc_dates_types =~ /Date copyrighted/'>
+		 		      ^ca_objects.date.dates_value 
+			     </unit>
+		    </div>
+     </if>	
+     <div id='donorl'>Donor:</div>
+	   <div id='donor'>
+        <unit relativeTo='ca_entities' delimiter=', ' restrictToRelationshipTypes='donor'>^ca_entities.preferred_labels.displayname
+        </unit>
+     </div>
+     <div id='acquisitionl'>Acquisition:</div><div id='acquisition'> ^ca_objects.acquisition_type_id</div>	
+     
+		 <div id='location'>
+        <div class='locationl'>Location:</div>
+			  <div class='locationd'> ".$location."  [ <span class='locationp'> ".$locationh." </span> ]
+     </div>
+    </div>
+		<div id='descriptionl'>Description: </div><div id='descriptiond'> ^ca_objects.description%delimiter=,_ </div>
+		
+		$pagebreak
+		
+		<div id='provenance$twopages'>
+		   <div class='provenancel'>Provenance:</div>
+			 <div class='provenanced'>^ca_objects.provenance</div>
+		</div>
+		<div class='a_bk'></div>
+          <div id='condition$twopages'>
+		  <div class='conditionl'>Condition:</div>
+			  <unit delimiter=\" <div class='conditionl'></div>\" >
+           <div class='conditioncon'>^ca_objects.condition_report.condition</div>	
+				   <div class='conditionn'>  ^ca_objects.condition_report.condition_notes </div>
+				   <div class='conditionu'>  ^ca_objects.condition_report.condition_by </div>
+				   <div class='conditiond'>  ^ca_objects.condition_report.condition_date</div>
+					 <br/>
+				</unit>
+				<div class='a_bk'></div>	
+		  </div>
+		  <div class='a_bk'></div>
+		 $catalogout
+		  
+		  $barcode2
+		  <div class='a_bk'></div>
+    </div>";
+	$out = $t_item->getWithTemplate($out);
+	
+/**************************************************
+ *             Unused report objects              *
+ **************************************************
+  <div class='sourcel'>Source:</div>
+  <div class='sourced'>
+     <unit relativeTo='ca_entities' delimiter=', ' restrictToRelationshipTypes='source'>
+		    ^ca_entities.preferred_labels.displayname ( ^ca_objects.acquisition_type_id )
+     </unit>
+  </div>	
+  <div class='a_bk'></div>
+
+   <div id='lotl'>Lot:</div><div id='lot'>^ca_object_lots</div>	
+   
+   <div id='ownersl$twopages'>Owners:</div>
+	 <div id='owners$twopages'><unit relativeTo='ca_entities' delimiter=', ' restrictToRelationshipTypes='owners'>
+		  ^ca_entities.preferred_labels.displayname 
+   </unit></div>
+   <div id='collectionl'>Collection:</div><div id='collection'>^ca_collections</div>
+  	
+ **************************************************
+ *                Style Sheet                     *
+ **************************************************/
+  $css= "
+<style type='text/css'>
+         
+   .a_bk        {clear:both;}
+   .arrowr      {width: 20px;height: 20px;background-position:center;background-repeat:no-repeat;
+                 background-image:url(data:image/gif;base64,R0lGODlhCgAKALMMAD09PdfX11xcXB8fH2xsbKmpqbi4uJqamg8PD+fn53t7ewAAAPX19QAAAAAAAAAAACH5BAEAAAwALAAAAAAKAAoAQAQkUInEqmVqoXNrXmBIJN8yFFcJCoGnKR0WgkArzy8ZAkaqULEIADs=);
+                }
+ #namel         {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 55px; left: 0px;}   
+ #name          {width:183px; height:33px; font-size:16px; position: absolute; 
+                 top: 55px; left:90px;line-height:1em;overflow:hidden;}
+ #mediar        {width:200px; height:183px;	position: absolute; 
+                 top: 55px; left: 520px;}
+ #mediar img    {max-height:183px;max-width:200px;width:auto;height:auto}
+ #barcode       {width:100px; height:100px;font-size:6px;word-wrap: break-word;overflow-wrap: break-word;	position: absolute;
+                 top: 840px; left: 680px;}
+ #barcode img   {height:100px;}
+ #idnol         {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 30px; left: 0px;}    
+ #idno          {width:183px; height:20px; font-size:20px; position: absolute; 
+                 top: 30px; left: 90px;}
+ #titlel        {width:85px; height:20px; font-size:14px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 87px; left: 0px;} 
+    .titlell    {font-size:14px; font-weight:bold;}                        
+ #titled        {width:200px; height:80px; font-size:16px; word-wrap: break-word;position: absolute;	
+                 top: 85px; left: 90px;line-height:1em;}
+ #othernumberl  {width:85px; height:20px; font-size:12px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 107px; left:0px;}     
+ #othernumberd  {width:100px; height:20px; font-size:12px; word-wrap: break-word;position: absolute;	
+                 top: 107px; left: 90px;}                 
+ #lexicon3      {width:228px; height:100px;margins:10px; position: absolute;border:2px solid black; 
+                 top: 30px; left: 280px;padding:2px;}	
+   .lexicon3l   {width:30px; height:20px; font-size:16px; margin-left:0px;text-align:left; font-weight:bold;display:inline;}    
+   .lexicon3d   {width:228px;height:100px; text-align:left;}
+   .lexicon3t   {width:228px;  font-size:13px; word-wrap: break-word;display:inline;}
+   .lexicon3h   {height:auto;font-size:10px;line-height: 60%;vertical-align: text-top;}				
+ #makerl        {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 155px; left: 0px;}    
+ #maker         {width:383px; height:20px; font-size:16px; word-wrap: break-word; position: absolute; 
+                 top: 155px; left: 90px;}		
+ #makedatel     {width:85px; height:20px; font-size:14px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 182px; left: 0px;}  /*lower down for smaller font*/  
+ #makedate      {width:345px; height:20px; font-size:16px; word-wrap: break-word; position: absolute; 
+                 top: 180px; left: 90px;}
+ #datecopyrl    {width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold; position: absolute;
+                 top: 180px; left: 230px;}
+ #datecopyr     {width:345px; height:20px; font-size:16px; word-wrap: break-word; position: absolute;
+                 top: 180px; left: 335px;}
+ #lotl          {width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold; position: absolute;
+                 top: 230px; left: 20px;}    
+ #lot           {width:345px; height:20px; font-size:16px; word-wrap: break-word; position: absolute;
+                 top: 230px; left: 125px;}
+ #collectionl   {width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold; position: absolute;
+                 top: 230px; left: 230px;}    
+ #collection    {width:345px; height:20px; font-size:16px; word-wrap: break-word; position: absolute;
+                 top: 230px; left: 335px;}	
+ #location      {width:710px; height:60px; position: absolute; 
+                 top: 350px; left: 0px;}    				
+   .locationl   {width:85px; height:25px; font-size:16px; text-align:right; font-weight:bold; display:inline-block;vertical-align: top;}    		
+   .locationd   {width:610px; height:60px; font-size:16px; word-wrap: break-word; display:inline-block;vertical-align: top;}
+   .locationp   {font-size:10px;}	
+ #materialsl    {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold; position: absolute; 
+                 top: 205px; left: 0px; }    
+ #materials     {width:345px; height:20px; font-size:16px; word-wrap: break-word; position: absolute; 
+                 top: 205px; left: 90px;}
+ #dimbox        {border:1px solid black;width:760px; height:40px; position: absolute; 
+                 top: 400px; left: -5px;padding:4px; }                 
+ #diml          {width:87px; height:20px; font-size:16px; text-align:right; font-weight:bold; display:inline-block;}
+   .dimlx       {font-size:16px;font-weight:bold;margin-top:4px;}           
+   .dimlb       {font-size:12px;font-weight:bold;font-style:italic;margin-top:4px;}                    
+ #dimd          {width:700px; height:20px; font-size:16px; word-wrap: break-word; display:inline-block;/*position: absolute; 
+                 top: 10px; left: 90px;*/}
+ #dim_l         {width:110px; height:20px; font-size:16px; word-wrap: break-word; text-align:right; border:0px solid green;
+                 display:inline-block;}
+ #dim_w         {width:110px; height:20px; font-size:16px; word-wrap: break-word; text-align:right; border:0px solid green;
+                 display:inline-block;}
+ #dim_h         {width:110px; height:20px; font-size:16px; word-wrap: break-word; text-align:right; border:0px solid green;
+                 display:inline-block;}
+ #dim_t         {width:110px; height:20px; font-size:16px; word-wrap: break-word;text-align:right; border:0px solid green;
+                 display:inline-block;}
+ #dim_wg         {width:150px; height:20px; font-size:16px; word-wrap: break-word;text-align:left;margin-left:20px; border:0px solid green;
+                  display:inline-block;}
+ #dim_n         {width:600px; height:20px; font-size:16px; word-wrap: break-word; text-align:left;
+                 display:inline;}                     
+ #cataloged     {width:710px; height:80px;position: absolute; 
+                 top: 880px; left: 0px;} 	    			
+   .catalogedl  {width:80px; height:20px; /*font-size:16px;*/ text-align:right; font-weight:bold; margin-top:2px;display:inline-block}    
+   .catalogedd  {width:120px; height:20px; font-size:16px;display:inline-block}				
+   .catalogedn  {width:480px; height:20px; display:inline-block}
+ #descriptionl  {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold; position: absolute; 
+                 top: 250px; left: 0px; }    
+ #descriptiond  {width:700px; height:100px; font-size:16px; word-wrap: break-word; position: absolute; 
+                 top: 250px; left: 90px;display:inline-block;overflow:hidden;}
+ #condition     {width:750px; height:60px; position: absolute; 
+                 top: 460px; left: 0px;}    
+ #condition2    {width:750px; height:200px; position: absolute; 
+                 top: 300px; left: 20px;} 
+   .conditionl  {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold; display:inline-block;} 
+   .conditioncon{width:50px; height:20px; font-size:16px; display:inline-block;}                  
+   .conditiond  {width:120px; height:20px; font-size:14px; display:inline-block;}				
+   .conditionu  {width:95px; height:20px; font-style:italic; display:inline-block;}			
+   .conditionn  {width:400px; height:20px; display:inline-block;}
+ #provenance    {width:750px; height:60px;position: absolute; border-top:1px solid gray; border-bottom:1px solid gray;
+                 top: 510px; left:0px;margin-top:10px;}
+ #provenance2   {width:750px; height:200px;position: absolute; 
+                 top: 50px; left: 0px; 	}
+   .provenancel {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold; display:inline-block;padding-top:4px;}                
+   .provenanced {width:650px;font-size:14px;padding-left:5px;display:inline-block;vertical-align: bottom;}
+ #ownersl       {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 840px; left: 0px;}    
+ #owners        {width:545px; height:20px; font-size:16px; word-wrap: break-word; position: absolute; 
+                 top: 840px; left: 90px;}
+ #ownersl2      {width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold; position: absolute;
+                 top: 500px; left: 20px;}    
+ #owners2       {width:545px; height:20px; font-size:16px; word-wrap: break-word; position: absolute;
+                 top: 500px; left: 125px;}  
+ #donorl        {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 830px; left: 0px;}    
+ #donor         {width:383px; height:20px; font-size:16px; word-wrap: break-word; position: absolute; 
+                 top: 830px; left: 90px;}
+ #acquisitionl    {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold;position: absolute; 
+                 top: 850px; left: 0px;}    
+ #acquisition     {width:383px; height:20px; font-size:16px; word-wrap: break-word; position: absolute; 
+                 top: 850px; left: 90px;}
+                 
+                                  
+ #source        {width:250px; height:100px;position: absolute; 
+                 top: 175px; left: 0px;}  
+   .sourcel     {width:85px; height:20px; font-size:16px; text-align:right; font-weight:bold; float:left;}    
+   .sourced     {width:195px; font-size:16px; text-align:left; float:left;}
+ #status        {width:255px; height:20px; position: absolute; 
+                 top: 25px; left: 525px;}  
+   .statusl     {width:48px; height:20px; font-size:16px; text-align:right; font-weight:bold; display:inline-block; vertical-align: middle;}    
+   .statusd     {width:200px;	font-size:14px;	text-align:left; display:inline-block;vertical-align:top;line-height:13px;}
+ #deaccession   {width:250px; height:50px;text-align:center;color:white;background-color:#505050;;filter:alpha(opacity=50); position: absolute; 
+                 top: 330px; left: 520px;} 	    			
+   .deaccessionl{font-size:14px; font-weight:bold;}    
+   .deaccessiond{font-size:12px;}				
+   .deaccessionn{font-size:12px;}
+ #version       {font-size:6px;position: absolute;
+                 top: 950px;left:0px;}		
+</style>";//style sheet
+
+
+/*****************************************
+ *               BEGIN                   *	
+ *****************************************/	
+	print $this->render("pdfStart.php");
+	echo $css;
+	print $this->render("header.php");
+	print $this->render("footer.php");	
+	echo $out;
+	print $this->render("pdfEnd.php");
+?>

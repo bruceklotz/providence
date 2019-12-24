@@ -1,0 +1,187 @@
+<?php
+/* ----------------------------------------------------------------------
+ * app/printTemplates/results/local/ca_storage_locations_bin_label_summery.php PELHAMHS.ORG
+ * ----------------------------------------------------------------------
+ *
+ * -=-=-=-=-=- CUT HERE -=-=-=-=-=-
+ * Template configuration:
+ *
+ * @name PHS Storage Locations Bin Label V1.0.0 Summary
+ * @type page
+ * @pageSize letter
+ * @pageOrientation portrait
+ * @tables *
+ *
+ * @marginTop 0.75in
+ * @marginLeft 0.25in
+ * @marginBottom 0.5in
+ * @marginRight 0.25in
+ *
+ * ----------------------------------------------------------------------
+ */
+	$version = "PHS Storage Locations Bin Label V1.0.0 Summary"; 
+ 	$t_item 				= $this->getVar('t_subject');
+	
+	//$this->setVar('headerTitle','Objects Bin Label');
+	$this->setVar('showPagenumber',false);
+  //$this->config->set('summary_show_timestamp',false);
+	
+	$out = $t_item->getWithTemplate("
+		<div class='accession'>
+			<div id='version'>$version $textlen</div>
+			<div id='timestamp'>".caGetLocalizedDate(null, array('dateFormat' => 'delimited'))."</div>");
+			
+//--- Generate Barcode ------
+	$root = 'http://pelhamhs.org/ca/index.php/editor/storage_locations/StorageLocationEditor/Edit/location_id/'; // this should get pulled out or automated somehow.
+	$path = $t_item->getWithTemplate($root."^ca_storage_locations.location_id");
+	$vs_path = caGenerateBarcode($path, array('checkValues' => $this->opa_check_values, 'type' => 'qrcode', 'height' => 3));
+	
+	$barcode = "<div id='barcode'><img src='$vs_path.png'/><br/>$path</div>";
+	
+  $parent_locationid = $t_item->get('ca_storage_locations.location_id');
+  // Get all objects within THIS Storage_Location
+  $this_objects = $t_item->get('ca_objects.object_id', array('returnAsArray' => true));
+  
+  $this_idno = $t_item->get('ca_objects.idno', array('returnAsArray' => true));  //used for sorting
+  array_multisort($this_idno,$this_objects); //sort object_ids by Object idno
+     
+  //first a dry run just to get a count:   
+  foreach ($this_objects as $key => $the_object_id) {
+     $the_object = new ca_objects($the_object_id);
+     $child_storage_ids = $the_object->get('ca_storage_locations.location_id',array('returnAsArray' => true));
+     $child_status =	$the_object->get('ca_objects_x_storage_locations.storage_location_status',array('convertCodesToDisplayText' => true,'returnAsArray' => true));
+		 foreach ($child_storage_ids as $child_key => $child_id) {
+        $pattern = "/" . preg_quote("Inactive", "/") . "/"; 
+        if ( ($child_id == $parent_locationid) & ( !preg_match($pattern, $child_status[$child_key]) ) ) {
+           // If we are working with THIS storage_location and NOT an Inactive location...
+           $objectcount++;
+        }//if child...	
+     }//foreach
+	}//foreachobject	
+	
+	//Now do it for real		
+	foreach ($this_objects as $key => $the_object_id) {
+     $the_object = new ca_objects($the_object_id);
+     $child_storage_ids = $the_object->get('ca_storage_locations.location_id',array('returnAsArray' => true));
+     $child_status =	$the_object->get('ca_objects_x_storage_locations.storage_location_status',array('convertCodesToDisplayText' => true,'returnAsArray' => true));
+		 $object_id = $the_object->get('ca_objects.idno');
+		 $object_name = $the_object->get('ca_objects.preferred_labels');
+			       
+     // Step through all of the Object's storage_locations
+     foreach ($child_storage_ids as $child_key => $child_id) {
+        $xc_storages =$the_object->get('ca_storage_locations',array('convertCodesToDisplayText' => true,'returnAsArray' => true));
+        $xc_storageids =$the_object->get('ca_storage_locations.idno',array('convertCodesToDisplayText' => true,'returnAsArray' => true));
+        $xc_storage = $xc_storages[$child_key];
+        $xc_storageid = $xc_storageids[$child_key];
+           
+        $pattern = "/" . preg_quote("Inactive", "/") . "/"; 
+        if ( ($child_id == $parent_locationid) & ( !preg_match($pattern, $child_status[$child_key]) ) ) {
+           // If we are working with THIS storage_location and NOT an Inactive location...
+           
+           
+           //--- "alternate" nonpreferred_labels ------
+           $fullname ="<div id='titled'>";
+           $name_array	= $the_object->get('ca_objects.nonpreferred_labels', array('convertCodesToDisplayText' => true,'returnWithStructure' => true));
+           $type_array	= $the_object->get('ca_objects.nonpreferred_labels.type_id', array('convertCodesToDisplayText' => true,'returnWithStructure' => true));
+           foreach($name_array as $key=>$nameitems){
+              foreach($nameitems as $ikey=>$nameitem){
+                 if ($type_array[$key][$ikey]['type_id'] == "alternate"){$fullname .= $nameitem['name'];}
+              }
+           }
+           $fullname .="</div>";
+           //------------------------------------------          
+           
+           $lines++;
+           switch ($objectcount){
+           	  case 1: 
+           	     // Format for a single object result...
+                 $objectout .= "<div class='idno1'>$object_id</div><div class='objectn1'>$object_name &nbsp;&nbsp;</div>";
+                 $objectout .= $fullname;
+                 $image =	"<div class='mediar'>". $the_object->get('ca_object_representations.media.thumbnail')."</div>";
+
+                 //--- Generate Barcode ------
+	               $root = 'http://pelhamhs.org/ca/index.php/editor/objects/ObjectEditor/Edit/object_id/'; // this should get pulled out or automated somehow.
+	               $path = $the_object->getWithTemplate($root."^ca_objects.object_id");
+	               $vs_path = caGenerateBarcode($path, array('checkValues' => $this->opa_check_values, 'type' => 'qrcode', 'height' => 3));
+	               $barcode = "<div id='barcode'><img src='$vs_path.png'/><br/>$path</div>";
+                 
+                 break;
+              case 2:
+              case 3:
+              case 4:
+                 // Format for a few (2-4) object results...
+                 $objectimage =	"<div class='mediar2'>". $the_object->get('ca_object_representations.media.thumbnail')."</div>";
+                 $objectout .= "<div class='object2'><div class='idno2'>$object_id  </div><div class='objectn2'>- $object_name</div>
+                               </div> $objectimage
+                                <br/>";
+                 break;
+              default:
+                 // Format for many object results...
+                 $objectout .= "<div class='object'><div class='idno'>$object_id - </div><div class='objectn'>$object_name &nbsp;&nbsp;</div></div>";
+			           if($lines > 2){$lines=0;$objectout .="<br/>";}
+           }//case           
+        }//if child...	
+     }//foreach
+  }//foreach object         
+	$out .= "	 
+       <div id='objects'>$objectout</div>	
+			 <div class='locationl'>Location:</div>
+       <div class='locationn'>^ca_storage_locations.preferred_labels.name</div>
+			 <div class='locationp'>[ ^ca_storage_locations.hierarchy.preferred_labels.name%removeFirstItems=1%delimiter=_>_ ]</div>
+       $barcode
+       $image
+	  </div>";
+	$out = $t_item->getWithTemplate($out);
+	
+/**************************************************
+ *                Style Sheet                     *
+ **************************************************/
+  $css= "
+<style type='text/css'>
+ 
+ #objects      {width:350px; height:60px;position: absolute;
+                top: 28px; left: 105px;}
+    .object    {width:135px;float:left;font-size:10px;height:10px;margins:0px;}  
+    .object2   {width:350px;float:left;font-size:10px;margins:0px;}  
+    .idno      {width:65px; height:10px;font-weight:bold;font-size:10px;display:inline-block;text-align:right;line-height:.9;}
+    .idno1     {width:300px; height:40px; font-size:40px; position: absolute; 
+                 top:0px; left:0px;}
+    .idno2      {width:155px; height:28px;font-weight:bold;font-size:25px;display:inline-block;text-align:right;line-height:.9;}
+    
+    .objectn   {width:75px; height:20px;display:inline-block;font-size:10px;overflow:hidden;line-height:.9;}              
+    .objectn1  {width:300px; height:20px; font-size:20px; position: absolute; 
+                 top: 43px; left:0px;}
+    .objectn2  {width:175px; height:28px;display:inline-block;font-size:20vw;overflow:hidden;line-height:.9;}   
+    /* font-size: calc(#{$min_font}px + (#{$max_font} - #{$min_font}) * ( (100vw - #{$min_width}px) / ( #{$max_width} - #{$min_width})));*/           
+ #barcode      {width:100px; height:100px;font-size:6px;word-wrap: break-word;overflow-wrap: break-word;	position: absolute;
+                top: 28px; left: 0px;}
+ #barcode img  {height:100px;}
+    .mediar        {width:75px; height:75px;	position: absolute; 
+                 top: 35px; left: 340px;}
+    .mediar2   {width:28px; height:28px;display:inline-block;}
+    .mediar2 img    {width:25px; height:25px;}
+
+ #titled       {width:300px; height:20px; font-size:20px; word-wrap: break-word;position: absolute;	
+                top: 65px; left: 0px;}				
+   .locationl  {width:90px; font-size:14px; text-align:right;  position: absolute; 
+                top: 150px; left: 0px;}    		
+   .locationn  {width:200px;font-size:25px;font-weight:bold;padding:2px;background-color:black;color:white;display:inline-block;position: absolute; 
+                top: 140px; left: 105px;}
+   .locationp  {font-size:10px;position: absolute; 
+                top: 180px; left: 105px;}	
+ #version      {font-size:6px;position: absolute;
+                top: 210px;left:0px;}		
+ #timestamp    {font-size:12px;text-align:right;position: absolute;
+                top: 198px;left:320px;}	                 
+</style>";//style sheet
+
+/*****************************************
+ *               BEGIN                   *	
+ *****************************************/	
+	print $this->render("pdfStart.php");
+	echo $css;
+	print $this->render("header.php");
+	print $this->render("footer.php");	
+	echo $out;
+	print $this->render("pdfEnd.php");
+	?>

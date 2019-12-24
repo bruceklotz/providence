@@ -1,0 +1,243 @@
+/* /local/PHS2pdf.css PELHAMHS.ORG V1.4.0  */
+
+@page { margin: 150px 66px; }
+#header { position: fixed; left: 0px; top: -35px; right: 0px; height: 55px;  text-align: left; vertical-align: top; margin: 0px 5px 10px 0px; padding: 0px 5px 2px 0px; }
+#footer { position: fixed; left: 0px; bottom: -50px; right: 0px; height: 20px; text-align: center; vertical-align: bottom; margin: 0px 5px 10px 5px; padding: 3px 5px 2px 10px; }
+#header .pagingText:after { content: counter(page, decimal); }
+#body { z-index: 30000; position: relative; }
+
+img.headerImg {width:351px;height:50px;}
+.headerTitle { width: 360px; font-size: 10px; margin: -5px 0px 0px 0px; height:55px;vertical-align: bottom }
+.pagingText { position: absolute; top: 0px; right: 10px; font-family: 'helvetica, sans-serif'; font-size: 11px; text-align: right;  margin: 0px 0px 10px 25px; }
+
+table.footerText { width: 100%; }
+td.footerText { font-family: 'helvetica, sans-serif'; font-size: 12px; text-align: center; }  
+span.footerText { font-family: 'helvetica, sans-serif'; font-size: 12px; margin-left: 45px; }  
+
+.thumbnail { font-family: 'helvetica, sans-serif'; font-size: 11px; border: 1px solid #ccc; width: 200px; height: 210px; position: absolute; text-align: center; margin: 0px 10px 10px 0px; padding: 3px; overflow: hidden; border-radius:4px;}	
+.imgThumb {width:194px; height:170px;}
+.caption {font-size:11px; color:#333; display:block;}
+
+.row { font-family: 'helvetica, sans-serif'; font-size: 11px; border-bottom: 1px solid #eee; width: 100%; height: auto; margin: 5px 0 0 0; padding: 3px 0px 5px 0px; overflow: hidden}	
+.imageTiny { width: 120px; margin: 0 5px 0 0; border-radius: 5px; text-align:center;}
+.imageTinyPlaceholder { width: 120px; height: 100px; border: 1px solid #eee; background-color: #eee; margin: 0 5px 0 0; border-radius: 5px;}
+.displayHeader { color:#666; font-weight:bold;}
+.displayValue {}
+.title {font-weight:bold; font-size: 14px; }
+.metadata {line-height:1.1em;}
+.metaBlock {margin-left:0px; height:auto; width:120mm; }
+
+.pageBreak { page-break-before: always; }
+.clear { clear: both; line-height: 5px; }
+
+
+
+.version {font-size:6px;text-align:center;}
+.headerTitle {font-size:30px; position: absolute; top: 10px; left: 380px;} 
+
+
+
+/****************************/
+/* accession Reports pdf    */
+/****************************/
+.a_bk{clear:both;}
+.arrowr{
+	background-image:URL( "/ca/themes/default/graphics/arrows/arrow_black_right.gif");
+	width:50px;
+}
+#name { width:183px; height:20px; font-size:16px;
+		position: absolute; top: 30px; left:20px;}
+
+#mediar { width:200px; height:183px;
+		position: absolute; top: 55px; left: 510px;
+}
+#mediar img { height:183px;}
+#barcode { width:100px; height:100px;font-size:6px;word-wrap: break-word;overflow-wrap: break-word;
+		position: absolute; top: 860px; left: 680px;}
+#barcode img { height:100px;}
+
+
+#idnol{	width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+		position: absolute; top: 50px; left: 20px;}    
+#idno { width:183px; height:20px; font-size:16px;
+		position: absolute; top: 50px; left: 125px;}
+#titlel{	width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+		position: absolute; top: 70px; left: 20px;}    
+#titled { width:300px; height:20px; font-size:16px; word-wrap: break-word;
+		position: absolute;	top: 70px; left: 125px;}
+#lexicon3 { width:490px; height:100px; position: absolute; top: 90px; left: 20px;border:0px solid black;	}	
+.lexicon3l{ width:100px; height:30px; font-size:16px; text-align:right; font-weight:bold;float:left;}    
+.lexicon3d{ width:390px;height:100px; float:left;}
+.lexicon3t{height:15px; font-size:16px; word-wrap: break-word;}
+.lexicon3h {/*float:left;*/ height:auto;font-size:10px;line-height: 60%;vertical-align: text-top;}				
+
+#makerl{	
+		width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+		position: absolute; top: 195px; left: 20px;
+}    
+#maker {width:383px; height:20px; font-size:16px; word-wrap: break-word;
+		position: absolute; top: 195px; left: 125px;
+}		
+#makedatel{	width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+		position: absolute; top: 210px; left: 20px;
+}    
+#makedate {	width:345px; height:20px; font-size:16px; word-wrap: break-word; 
+		position: absolute; top: 210px; left: 125px;
+}
+
+#datecopyrl{	width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold; 
+	position: absolute; top: 210px; left: 230px;}
+#datecopyr {	width:345px; height:20px; font-size:16px; word-wrap: break-word; 
+		position: absolute; top: 210px; left: 335px;}
+
+#lotl{ width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+		position: absolute; top: 230px; left: 20px;}    
+#lot {	width:345px; height:20px; font-size:16px; word-wrap: break-word;
+		position: absolute; top: 230px; left: 125px;}
+		
+#collectionl{	width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+		position: absolute; top: 230px; left: 230px;}    
+#collection {	width:345px; height:20px; font-size:16px; word-wrap: break-word; 
+		position: absolute; top: 230px; left: 335px;}	
+#location{ width:410px; height:60px;
+	position: absolute; top: 300px; left: 20px;}    				
+.locationl{	width:100px; height:25px; font-size:16px; text-align:right; font-weight:bold; float:left;}    		
+.locationd{ width:310px; height:60px; font-size:16px; word-wrap: break-word; float:left;}
+.locationp{ font-size:10px;}	
+
+#materialsl{ width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+	 position: absolute; top: 400px; left: 20px; 
+}    
+#materials{ width:345px; height:20px; font-size:16px; word-wrap: break-word;
+	position: absolute; top: 400px; left: 125px;
+}
+#dimension{ width:450px; height:60px; 
+		position: absolute; top: 400px; left: 330px;}  			
+.dimensionl{ width:100px; height:55px; font-size:16px; text-align:right; font-weight:bold; float:left;}    
+.dimensiond { width:350px font-size:16px; text-align:left; float:left;}
+
+#cataloged{ width:710px; height:80px;
+	position: absolute; top: 880px; left: 20px;} 	    			
+.catalogedl{ width:105px; height:20px; font-size:16px; text-align:right; font-weight:bold; float:left;}    
+.catalogedd{ width:120px; height:20px; font-size:16px; float:left;}				
+.catalogedn{ width:480px; height:20px; float:left;}
+ 
+#description{ width:750px; height:200px; 
+	  position: absolute; top: 500px; left: 20px;
+	
+	  overflow:hidden;text-overflow: ellipsis;
+	  border-top:1px solid gray; border-bottom:1px solid gray;}
+.descriptiond{	font-size:14px;}      				
+
+#description2{ width:750px; height:500px; 
+	  position: absolute; top: 500px; left: 20px;
+	
+	  overflow:hidden;text-overflow: ellipsis;
+	  border-top:1px solid gray; border-bottom:1px solid gray;}
+.descriptiond2{	font-size:14px;}      				
+
+
+#condition{ width:750px; height:60px; 
+	  position: absolute; top: 740px; left: 20px;}    
+#condition2{ width:750px; height:200px; 
+	  position: absolute; top: 300px; left: 20px;}    	  
+.conditiond{ width:120px; height:20px; font-size:16px; display:inline-block;}				
+.conditionu{ width:85px; height:20px; font-style:italic; display:inline-block;}			
+.conditionn{ width:480px; height:20px; display:inline-block;}
+
+#provenance{ width:750px; height:60px;
+	position: absolute; top: 800px; left: 20px;
+ 	border-top:1px solid gray; border-bottom:1px solid gray;}
+#provenance2{ width:750px; height:200px;
+	position: absolute; top: 50px; left: 20px;
+ 	}
+.provenanced{font-size:14px}
+
+#ownersl{	width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+		position: absolute; top: 860px; left: 20px;
+}    
+#owners {	width:545px; height:20px; font-size:16px; word-wrap: break-word; 
+		position: absolute; top: 860px; left: 125px;
+}
+#ownersl2{	width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold;
+		position: absolute; top: 500px; left: 20px;
+}    
+#owners2 {	width:545px; height:20px; font-size:16px; word-wrap: break-word; 
+		position: absolute; top: 500px; left: 125px;
+}  
+#source{ width:250px; height:100px;
+	position: absolute; top: 250px; left: 20px;}  
+.sourcel { width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold; float:left;}    
+.sourced { width:195px; font-size:16px; text-align:left; float:left;}
+
+#status{ width:450px; height:20px; 
+	position: absolute; top: 30px; left: 500px;}  
+.statusl{	width:60px; height:20px; font-size:16px; text-align:right; font-weight:bold; float:left; vertical-align: text-bottom;}    
+.statusd { width:350px;	font-size:16px;	text-align:left; float:left;}
+
+.accession hr{ width:750px; height:1px; text-align:center; float:left;}
+
+#deaccession{ width:250px; height:50px;text-align:center;color:white;background-color:black;
+							position: absolute; top: 250px; left: 520px;} 	    			
+.deaccessionl{/* width:256px; height:20px;*/ font-size:14px; font-weight:bold;}    
+.deaccessiond{/* width:256px; height:20px;*/ font-size:12px;}				
+.deaccessionn{/* width:256px; height:20px;*/font-size:12px;}
+	
+.d_full{ width:650px; height:auto; font-size:18px; word-wrap: break-word; float:left;}		
+.d_full_l{ width:750px; height:auto; font-size:16px; word-wrap: break-word; float:left;}		
+.l_left{ width:100px; height:20px; font-size:16px; text-align:right; font-weight:bold; float:left;}
+#version{
+	font-size:6px;
+	/*height:100px;*/
+	position: absolute;
+		top: 950px;
+		left:0px;/*
+	-moz-transform:rotate(-270deg); 
+    	-moz-transform-origin: bottom left;
+    	-webkit-transform: rotate(-270deg);
+    	-webkit-transform-origin: bottom left;
+    	-o-transform: rotate(-270deg);
+    	-o-transform-origin:  bottom left;
+    	filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);*/
+}
+
+/*****************************************/
+/***          Deed of Gift             ***/
+/*****************************************/
+#deedofgift_title{ text-align:center;font-size:24px;
+	  position: absolute; top: 30px; left: 330px;
+}
+#deedofgift_top{text-align:center; width:730px; height:100px;
+	  position: absolute; top: 190px; left: 30px;
+}
+#deedofgift_accessionl{ width:100px; height:30px;
+		font-weight:bold;
+	  position: absolute; top: 40px; left: 30px;
+}
+#deedofgift_accession{ width:200px; height:30px;
+	  position: absolute; top: 40px; left: 130px;
+}
+
+#deedofgift_datel{ font-weight:bold;position: absolute; top: 40px; left: 590px;} 
+#deedofgift_date{ position: absolute; top: 40px; left: 630px;} 
+
+#deedofgift_donorl{ width:100px; height:50px; font-weight:bold;  position: absolute; top: 90px; left:30px; } 
+#deedofgift_donor{ width:220px; height:50px; position: absolute; top: 90px; left: 130px; }    			
+
+#deedofgift_body{ width:730px; height:380px; position: absolute; top: 250px; left: 30px;}
+#legaltext2{}				
+#deedofgift_descriptionl{font-weight:bold;}
+#deedofgift_description{}	
+#deedofgift_legalfoot{height:80px;text-align:center;}	
+#deedofgift_sigblock{ width:720px; height:80px; position: absolute; top: 650px; left: 30px; }	
+
+/**** Recept of Gift ****/
+#receptofgift_top{text-align:center; width:730px; height:100px;
+	  position: absolute; top: 180px; left: 30px;
+}
+
+#receptofgift_donorl{ width:150px; height:50px; font-weight:bold;  position: absolute; top: 90px; left:30px; } 
+#receptofgift_donor{ width:450px; height:50px; position: absolute; top: 90px; left: 140px;}    
+#receptofgift_sigblock{ width:720px; height:80px; position: absolute; top: 550px; left: 30px; }
+
+ 
